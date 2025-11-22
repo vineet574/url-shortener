@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>URL Shortener</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
+    h1 { text-align: center; }
+    form { margin-top: 20px; display: flex; gap: 8px; }
+    input[type="text"] { flex: 1; padding: 8px; }
+    button { padding: 8px 16px; cursor: pointer; }
+    .result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; word-break: break-all; }
+    .error { color: red; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>URL Shortener</h1>
+  <form id="urlForm">
+    <input type="text" id="originalUrl" placeholder="Enter long URL (https://...)" required>
+    <button type="submit">Shorten</button>
+  </form>
+  <div class="error" id="error"></div>
+  <div class="result" id="result" style="display:none;">
+    Short URL: <a id="shortLink" href="#" target="_blank"></a>
+  </div>
+
+  <script>
+    const form = document.getElementById('urlForm')
+    const input = document.getElementById('originalUrl')
+    const errorDiv = document.getElementById('error')
+    const resultDiv = document.getElementById('result')
+    const shortLink = document.getElementById('shortLink')
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      errorDiv.textContent = ''
+      resultDiv.style.display = 'none'
+
+      const originalUrl = input.value.trim()
+      if (!originalUrl) {
+        errorDiv.textContent = 'Please enter a URL'
+        return
+      }
+
+      try {
+        const res = await fetch('/api/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ originalUrl })
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          errorDiv.textContent = data.error || 'Something went wrong'
+          return
+        }
+        shortLink.href = data.shortUrl
+        shortLink.textContent = data.shortUrl
+        resultDiv.style.display = 'block'
+      } catch (err) {
+        errorDiv.textContent = 'Network error'
+      }
+    })
+  </script>
+</body>
+</html>
